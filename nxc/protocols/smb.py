@@ -1,6 +1,7 @@
 import ntpath
 import binascii
 import os
+import random
 import re
 import struct
 import ipaddress
@@ -35,7 +36,7 @@ from impacket.krb5 import constants
 from impacket.dcerpc.v5.dtypes import NULL
 from impacket.dcerpc.v5.dcomrt import DCOMConnection
 from impacket.dcerpc.v5.dcom.wmi import CLSID_WbemLevel1Login, IID_IWbemLevel1Login, IWbemLevel1Login
-from impacket.smb3structs import FILE_SHARE_WRITE, FILE_SHARE_DELETE, SMB2_0_IOCTL_IS_FSCTL
+from impacket.smb3structs import FILE_SHARE_WRITE, FILE_SHARE_DELETE, SMB2_0_IOCTL_IS_FSCTL, SMB2_DIALECT_311
 from impacket.dcerpc.v5 import tsts as TSTS
 
 from nxc.config import process_secret, host_info_colors, check_guest_account
@@ -555,7 +556,7 @@ class smb(connection):
             conn = SMBConnection(
                 self.remoteName,
                 self.host,
-                None,
+                gen_random_string(random.randint(5, 9)),
                 self.port,
                 preferredDialect=SMB_DIALECT,
                 timeout=self.args.smb_timeout,
@@ -586,9 +587,10 @@ class smb(connection):
             self.conn = SMBConnection(
                 self.remoteName,
                 self.host,
-                None,
+                gen_random_string(random.randint(5, 9)),
                 self.port,
                 timeout=self.args.smb_timeout,
+                preferredDialect=SMB2_DIALECT_311,
             )
             self.smbv3 = True
         except (Exception, NetBIOSTimeout, OSError) as e:
