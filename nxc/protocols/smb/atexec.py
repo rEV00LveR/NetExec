@@ -4,6 +4,8 @@ from textwrap import dedent
 from impacket.dcerpc.v5 import tsch, transport
 from impacket.dcerpc.v5.dtypes import NULL
 from impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_GSS_NEGOTIATE, RPC_C_AUTHN_LEVEL_PKT_PRIVACY
+from impacket.smb3structs import SMB2_DIALECT_311
+
 from nxc.helpers.misc import gen_random_string
 from time import sleep
 from datetime import datetime, timedelta
@@ -64,6 +66,8 @@ class TSCH_EXEC:
                 self.__aesKey,
             )
             self.__rpctransport.set_kerberos(self.__doKerberos, self.__kdcHost)
+            self.__rpctransport.preferred_dialect(SMB2_DIALECT_311)
+
 
     def execute(self, command, output=False):
         self.__retOutput = output
